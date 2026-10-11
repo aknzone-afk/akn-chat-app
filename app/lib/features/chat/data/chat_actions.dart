@@ -296,16 +296,18 @@ class ChatActions {
           onProgress: (p) => outbox.setProgress(messageId, p),
         );
     try {
+      String path;
       try {
-        mediaPath = await doUpload();
+        path = await doUpload();
       } catch (e) {
         // 11-Oct-2026: a refused upload is usually a login token minted before
         // the staff mark existed - refresh it once and try again quietly.
         final code = describeError(e).code;
         if (code != 'unauthorized' && code != 'permission-denied') rethrow;
         await FirebaseAuth.instance.currentUser?.getIdToken(true);
-        mediaPath = await doUpload();
+        path = await doUpload();
       }
+      mediaPath = path;
       // The path goes onto the ENTRY, not just into this local. It is the only
       // record on this phone of where the bytes landed, and `retry()` needs it
       // to rewrite a draft whose write was rejected.
