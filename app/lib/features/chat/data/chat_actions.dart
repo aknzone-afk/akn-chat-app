@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -287,14 +288,24 @@ class ChatActions {
 
     // ---- 1. Storage ------------------------------------------------------
     final String mediaPath;
+    Future<String> doUpload() => mediaUploader.upload(
+          media: prepared,
+          phoneNumberId: phoneNumberId,
+          waId: waId,
+          messageId: messageId,
+          onProgress: (p) => outbox.setProgress(messageId, p),
+        );
     try {
-      mediaPath = await mediaUploader.upload(
-        media: prepared,
-        phoneNumberId: phoneNumberId,
-        waId: waId,
-        messageId: messageId,
-        onProgress: (p) => outbox.setProgress(messageId, p),
-      );
+      try {
+        mediaPath = await doUpload();
+      } catch (e) {
+        // 11-Oct-2026: a refused upload is usually a login token minted before
+        // the staff mark existed - refresh it once and try again quietly.
+        final code = describeError(e).code;
+        if (code != 'unauthorized' && code != 'permission-denied') rethrow;
+        await FirebaseAuth.instance.currentUser?.getIdToken(true);
+        mediaPath = await doUpload();
+      }
       // The path goes onto the ENTRY, not just into this local. It is the only
       // record on this phone of where the bytes landed, and `retry()` needs it
       // to rewrite a draft whose write was rejected.

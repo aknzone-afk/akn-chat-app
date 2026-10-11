@@ -92,6 +92,9 @@ Future<void> main() async {
 
   final prefs = await SharedPreferences.getInstance();
 
+  // 11-Oct-2026: pick up the staff mark (storage.rules) without waiting an hour.
+  unawaited(FirebaseAuth.instance.currentUser?.getIdToken(true).catchError((_) => null) ?? Future<void>.value());
+
   runApp(
     ProviderScope(
       overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
