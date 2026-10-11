@@ -1,0 +1,11 @@
+# app/ios/fastlane/Matchfile — certificate + key + App Store profile live encrypted
+# (MATCH_PASSWORD) in the private repo akn-chat-ios-certs, reached over SSH.
+git_url(ENV.fetch("MATCH_GIT_URL", "git@github.com:aknzone-afk/akn-chat-ios-certs.git"))
+storage_mode("git")
+git_branch("main")
+
+type("appstore")
+app_identifier(["com.bbsynthetics.aknChat"])
+team_id("DWJM58G45V")
+platform("ios")
+generate_apple_certs(true)

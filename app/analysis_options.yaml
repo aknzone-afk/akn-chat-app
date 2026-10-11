@@ -1,0 +1,22 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    # `flutter build ios` unpacks the Firebase SwiftPM checkouts — including the
+    # plugins' own `test/` folders — under build/. That is not our code and it
+    # does not analyse cleanly on its own, so keep it out.
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+
+linter:
+  rules:
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_const_literals_to_create_immutables: true
+    avoid_print: true
+    use_super_parameters: true

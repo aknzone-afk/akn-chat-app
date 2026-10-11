@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "525747821627",
+    "project_id": "akn-chat-a7dd8",
+    "storage_bucket": "akn-chat-a7dd8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:525747821627:android:bda2762080925f1895d01e",
+        "android_client_info": {
+          "package_name": "com.bbsynthetics.akn_chat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAlgcvy486z4PspfQQZRIUOa8yR3YpWTYI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

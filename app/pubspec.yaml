@@ -1,0 +1,112 @@
+name: akn_chat
+description: "AKN CHAT — WhatsApp Cloud API business messenger for B.B Synthetics (AKN ZONE)."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.0
+  flutter: ">=3.44.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # --- Firebase: FlutterFire BoM 4.17.1 (a mutually consistent set) ---
+  firebase_core: ^4.12.1
+  firebase_auth: ^6.5.6
+  cloud_firestore: ^6.7.1
+  cloud_functions: ^6.3.5
+  firebase_storage: ^13.4.5        # Phase 4: outbound uploads + inbound downloads
+  firebase_messaging: ^16.4.3      # Phase 4: push
+
+  # --- state / routing / ui ---
+  flutter_riverpod: ^3.3.2
+  go_router: ^17.3.0
+  cached_network_image: ^3.4.1   # unused in Phase 3; the Phase 4 media viewer needs it
+  flutter_cache_manager: ^3.4.2  # so the local→remote image handover does not flash
+  uuid: ^4.6.0
+  intl: ^0.20.2                  # NOT ^0.20.3 — flutter_localizations pins 0.20.2 exactly
+  shared_preferences: ^2.5.3     # theme mode + per-chat drafts, on-device only
+
+  # --- Phase 4: picking ---
+  # image_picker for photos and video (it is the only package with a first-class
+  # camera intent path, and on Android 13+ it uses the system Photo Picker,
+  # which needs ZERO storage permissions — see the manifest).
+  # file_picker ONLY behind the "document" button; it drags extra iOS Info.plist
+  # obligations along with it.
+  image_picker: ^1.2.3
+  image_picker_android: ^0.8.13+19  # pinned for useAndroidPhotoPicker / `limit:`
+  # A direct dependency only because enableAndroidPhotoPicker() has to reach
+  # ImagePickerPlatform.instance to flip the flag.
+  image_picker_platform_interface: ^2.11.0
+  file_picker: ^11.0.2              # NOT 12.0.0-beta — do not ship a pre-release
+
+  # --- Phase 4: image processing ---
+  # Native (Bitmap / ImageIO), not Dart. A Dart-only resize is too slow even in
+  # an isolate, which is the package's own stated reason for existing.
+  flutter_image_compress: ^2.5.1
+
+  # --- Phase 4: viewing ---
+  photo_view: ^0.15.0               # pinch-zoom + paging + Hero, together
+  video_player: ^2.13.0
+  # 1.13.x for the same win32 reason as share_plus above: chewie 1.14 pulls
+  # wakelock_plus 1.6.1, which wants win32 ^6, which file_picker 11 refuses.
+  # Chewie is UI only — the playback engine is video_player either way.
+  chewie: ^1.13.1
+
+  # --- Phase 4: audio ---
+  # just_audio over audioplayers for first-class position/duration/state
+  # streams and LockCachingAudioSource (streams AND caches in one pass).
+  just_audio: ^0.10.6
+
+  # --- Phase 4: documents / share ---
+  open_filex: ^4.7.0
+  # 12.x, NOT 13.x, and this is a hard constraint rather than caution:
+  # share_plus >= 13.1.0 depends on win32 ^6, file_picker 11.x depends on
+  # win32 ^5.9, and pub refuses to solve the two together. win32 is a
+  # Windows-only transitive dependency that neither Android nor iOS ever loads,
+  # but the version solver does not care. 12.0.2 already has the instance API
+  # (SharePlus.instance.share(ShareParams(...))) that 13.x documents, so nothing
+  # is lost. Revisit when file_picker 12 leaves beta.
+  share_plus: ^12.0.2
+
+  # --- Phase 4: notifications ---
+  # Needed even with a `notification` payload: on Android the Firebase SDK
+  # SUPPRESSES the tray notification while the app is foregrounded, so we render
+  # that case ourselves — and that is also where per-chat grouping lives,
+  # because FCM's AndroidNotification has a `tag` but no `group`.
+  flutter_local_notifications: ^22.2.0
+
+  # --- Phase 4: plumbing ---
+  path_provider: ^2.1.5
+  path: ^1.9.1
+  crypto: ^3.0.6
+  pdfrx: ^2.4.8
+  url_launcher: ^6.3.3
+  flutter_contacts: ^2.6.0
+
+  # DELIBERATELY ABSENT, each for a reason:
+  #   permission_handler — not needed. The system pickers prompt themselves, and
+  #     FirebaseMessaging.requestPermission() raises the Android 13+
+  #     POST_NOTIFICATIONS dialog directly. Adding it would also drag in a
+  #     Podfile macro block, and this project has no Podfile (it builds via SPM).
+  #   media_kit — would decode Ogg/Opus on iOS in-process, at tens of MB of
+  #     native binary and a second player abstraction. The server-side
+  #     transcode (functions/handlers/transcodeVoiceNote.js) is the better fix.
+  #   ffmpeg_kit_flutter — RETIRED. Arthenica pulled the binaries from Maven
+  #     Central and CocoaPods in April 2025; adding it fails dependency
+  #     resolution outright.
+  #   video thumbnail packages — no video posters in Phase 4 (see the design's
+  #     "deliberate exclusions").
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  # No binary assets in Phase 3 — the chat wallpaper is painted, not shipped.
+  # Phase 4 adds an `assets:` block here for the media UI that replaces the
+  # placeholders.

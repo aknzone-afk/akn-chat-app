@@ -1,0 +1,124 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Firestore, Auth and the three callables all talk to Google over the
+         network. Without INTERNET the app starts, restores the session from
+         cache, and then shows an empty chat list with no error anywhere. -->
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <!-- Phase 4: push. flutter_local_notifications has declared only the bare
+         minimum since v16, so these two are ours to add. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+
+    <!-- ⚠️ THE MOST IMPORTANT LINES IN THIS FILE, and they are all removals.
+         Attaching a photo goes through the ANDROID SYSTEM PHOTO PICKER, which
+         needs NO storage permission at all. Declaring READ_MEDIA_IMAGES or
+         READ_MEDIA_VIDEO for one-off picking is a Google Play Photo & Video
+         Permissions policy violation (enforced since 2024-10-31) and gets apps
+         rejected. A transitive dependency can still drag them into the merged
+         manifest, so they are stripped explicitly.
+
+         Verify after any dependency bump:
+           ./gradlew :app:processReleaseManifest
+           then read app/build/intermediates/merged_manifests/ -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"      tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"       tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"  tools:node="remove"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove"/>
+    <!-- open_filex declares this one, and it is the music-library permission.
+         We never browse the phone's audio; we open a file out of our own
+         sandbox. Verified present in the merged manifest before this line was
+         added, and absent after. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"       tools:node="remove"/>
+
+    <!-- CAMERA is DELIBERATELY ABSENT. image_picker uses ACTION_IMAGE_CAPTURE,
+         which does not require it — and declaring it makes Android START
+         ENFORCING it, so capture would fail until it had been granted at
+         runtime. Only the `camera` plugin needs it, and we do not use it.
+
+         MANAGE_EXTERNAL_STORAGE is absent too: it is an instant Play rejection,
+         and every file we open lives in our own sandbox. -->
+
+    <application
+        android:label="AKN Chat"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher">
+
+        <!-- android:windowSoftInputMode="adjustResize" is load-bearing. It is
+             what lets Scaffold.resizeToAvoidBottomInset shrink the message
+             list's viewport from the bottom; with adjustPan the reversed
+             list's bottom anchor stops working and the composer floats over
+             the newest message. -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <!-- Specifies an Android theme to apply to this Activity as soon as
+                 the Android process has started. This theme is visible to the user
+                 while the Flutter UI initializes. After that, this theme continues
+                 to determine the Window background behind the Flutter UI. -->
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <!-- Don't delete the meta-data below.
+             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+
+        <!-- Phase 4: push.
+             The channel id MUST match kChatChannel.id in
+             lib/features/push/notification_channels.dart AND the `channelId`
+             functions/lib/push.js puts on every payload. Three places, one
+             string; get it wrong and Android silently drops the notification.
+
+             The icon must be a WHITE-ON-TRANSPARENT silhouette. Anything else
+             renders as a grey square on Android 5+. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="chat_messages" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_notify" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_color" />
+    </application>
+    <!-- Required to query activities that can process text, see:
+         https://developer.android.com/training/package-visibility and
+         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+
+         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+
+        <!-- Phase 4: package visibility for open_filex. On targetSdk 30+ an
+             app cannot see which other apps can handle a VIEW intent unless it
+             declares this, and without it opening a PDF fails to resolve
+             SILENTLY — it looks exactly like "no app installed".
+
+             open_filex ships its own FileProvider, so no <provider> block is
+             needed here. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:mimeType="*/*"/>
+        </intent>
+    </queries>
+</manifest>

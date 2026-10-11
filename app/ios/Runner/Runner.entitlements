@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	    Push Notifications.
+
+	    `development` is correct for a debug build installed straight onto the
+	    iPhone, which is how this app is deployed today. Xcode rewrites it to
+	    `production` when the app is archived for TestFlight or the App Store,
+	    and Firebase's .p8 APNs key covers BOTH environments — which is exactly
+	    why a .p8 key is preferred over a legacy .p12 certificate.
+
+	    ⚠️ A missing entitlement in ONE configuration is the number-one cause of
+	    a null APNs token, and it fails completely silently: no error, no log,
+	    just a `getToken()` that never resolves. CODE_SIGN_ENTITLEMENTS is set
+	    for Debug, Profile AND Release in project.pbxproj — check all three if
+	    notifications ever stop arriving on iOS.
+	-->
+	<key>aps-environment</key>
+	<string>development</string>
+</dict>
+</plist>
