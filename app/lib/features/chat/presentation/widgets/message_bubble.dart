@@ -16,6 +16,7 @@ import '../../domain/message.dart';
 import '../../providers/chat_providers.dart';
 import 'bot_why_sheet.dart';
 import 'date_chip.dart';
+import 'forward_sheet.dart';
 import 'link_spans.dart';
 import 'media/document_tile.dart';
 import 'media/image_bubble.dart';
@@ -208,6 +209,14 @@ class _MessageRowWidgetState extends ConsumerState<MessageRowWidget> {
         onPressed: _startReply,
         child: const Text('Reply karein'),
       ),
+      // 14-Oct-2026: forward a text / photo / file to other chats.
+      if (widget.row.tick != Tick.failed &&
+          (message.rendersAsText || message.mediaPath != null))
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.shortcut_rounded, size: 19),
+          onPressed: () => showForwardSheet(context, fromWaId: widget.waId, messageId: message.id),
+          child: const Text('Forward karein'),
+        ),
       if (message.rendersAsText || message.caption != null)
         MenuItemButton(
           leadingIcon: const Icon(Icons.copy_rounded, size: 19),
